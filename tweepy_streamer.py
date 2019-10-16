@@ -8,13 +8,14 @@ import twitter_credentials
 
 # # #  # TWITTER CLIENT # # # #
 class TwitterClient():
-    def __init__(self):
+    def __init__(self, twitter_user=None):
         self.auth = TwitterAuthenticator().authenticate_twitter_app()
         self.twitter_client = API(self.auth)
 
+        self.twitter_user = twitter_user
     def get_user_timeline_tweets(self, num_tweets):
         tweets = []
-        for tweet in Cursor(self.twitter_client.user_timeline).items(num_tweets):
+        for tweet in Cursor(self.twitter_client.user_timeline, id=self.twitter_user).items(num_tweets):
             tweets.append(tweet)
         return tweets
 
@@ -76,7 +77,7 @@ if __name__ == '__main__':
     hash_tag_list = ["donal trump", "hillary clinton", "barack obama", "bernie sanders"]
     fetched_tweets_filename = "tweets.txt"
 
-    twitter_client = TwitterClient()
+    twitter_client = TwitterClient('pycon')
     print (twitter_client.get_user_timeline_tweets(1))
     # twitter_streamer = TwitterStreamer()
     # twitter_streamer.stream_tweets(fetched_tweets_filename, hash_tag_list)
