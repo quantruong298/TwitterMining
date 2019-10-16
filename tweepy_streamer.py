@@ -1,9 +1,18 @@
+from tweepy import API
+from tweepy import Cursor
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
 
 import twitter_credentials
 
+# # # # TWITTER AUTHENTICATER # # # #
+class TwitterAuthenticator():
+
+    def authenticate_twitter_app(self):
+        auth = OAuthHandler(twitter_credentials.CONSUMER_KEY, twitter_credentials.CONSUMER_SECRET)
+        auth.set_access_token(twitter_credentials.ACCESS_TOKEN, twitter_credentials.ACCESS_TOKEN_SECRET)
+        return auth
 
 # # # # TWITTER STREAMER # # # #
 class TwitterStreamer():
@@ -12,13 +21,12 @@ class TwitterStreamer():
     """
 
     def __init__(self):
-        pass
+        self.twitter_authenticator = TwitterAuthenticator()
 
     def stream_tweets(self, fetched_tweets_filename, hash_tag_list):
         # This handles Twitter authetification and the connection to Twitter Streaming API
-        listener = StdOutListener(fetched_tweets_filename)
-        auth = OAuthHandler(twitter_credentials.CONSUMER_KEY, twitter_credentials.CONSUMER_SECRET)
-        auth.set_access_token(twitter_credentials.ACCESS_TOKEN, twitter_credentials.ACCESS_TOKEN_SECRET)
+        listener = TwitterListener(fetched_tweets_filename)
+        auth = self.twitter_authenticator.authenticate_twitter_app()
         stream = Stream(auth, listener)
 
         # This line filter Twitter Streams to capture data by the keywords:
@@ -26,7 +34,7 @@ class TwitterStreamer():
 
 
 # # # # TWITTER STREAM LISTENER # # # #
-class StdOutListener(StreamListener):
+class TwitterListener(StreamListener):
     """
     This is a basic listener that just prints received tweets to stdout.
     """
