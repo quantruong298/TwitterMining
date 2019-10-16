@@ -6,6 +6,18 @@ from tweepy import Stream
 
 import twitter_credentials
 
+# # #  # TWITTER CLIENT # # # #
+class TwitterClient():
+    def __init__(self):
+        self.auth = TwitterAuthenticator().authenticate_twitter_app()
+        self.twitter_client = API(self.auth)
+
+    def get_user_timeline_tweets(self, num_tweets):
+        tweets = []
+        for tweet in Cursor(self.twitter_client.user_timeline).items(num_tweets):
+            tweets.append(tweet)
+        return tweets
+
 # # # # TWITTER AUTHENTICATER # # # #
 class TwitterAuthenticator():
 
@@ -64,5 +76,7 @@ if __name__ == '__main__':
     hash_tag_list = ["donal trump", "hillary clinton", "barack obama", "bernie sanders"]
     fetched_tweets_filename = "tweets.txt"
 
-    twitter_streamer = TwitterStreamer()
-    twitter_streamer.stream_tweets(fetched_tweets_filename, hash_tag_list)
+    twitter_client = TwitterClient()
+    print (twitter_client.get_user_timeline_tweets(1))
+    # twitter_streamer = TwitterStreamer()
+    # twitter_streamer.stream_tweets(fetched_tweets_filename, hash_tag_list)
