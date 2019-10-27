@@ -137,3 +137,12 @@ corpus = [id2word.doc2bow(text) for text in texts]
 
 # View
 print(corpus[:1])
+
+# # ==========DONE STEP 11=====================
+# Build LDA model
+lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus, id2word=id2word, num_topics=20, random_state=100,
+                                           update_every=1,
+                                           chunksize=100,
+                                           passes=10,
+                                           alpha='auto',
+                                           per_word_topics=True)
