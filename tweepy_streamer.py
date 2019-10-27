@@ -94,7 +94,7 @@ class TwitterListener(StreamListener):
 class TweetAnalyzer():
     # Functionalily for analyzing and categoryzing content from tweets
     def tweets_to_data_frame(self, tweets):
-        df = pd.DataFrame(data=[tweets.text for tweet in tweets], columns=['Tweets'])
+        df = pd.DataFrame(data=[tweet.text for tweet in tweets], columns=['Tweets'])
         return df
 
 
@@ -104,7 +104,7 @@ if __name__ == '__main__':
     tweet_analyzer = TweetAnalyzer()
     api = twitter_client.get_twitter_client_api()
 
-    tweets = api.user_timeline(screen_name="BillGates", count=3)
+    tweets = api.user_timeline(screen_name="BillGates", count=10)
 
     df = tweet_analyzer.tweets_to_data_frame(tweets)
     print(df.head(10))
