@@ -5,14 +5,22 @@ from tweepy import OAuthHandler
 from tweepy import Stream
 
 import twitter_credentials
+import numpy as np
+import pandas as pd
 
 # # #  # TWITTER CLIENT # # # #
+
+
 class TwitterClient():
     def __init__(self, twitter_user=None):
         self.auth = TwitterAuthenticator().authenticate_twitter_app()
         self.twitter_client = API(self.auth)
 
         self.twitter_user = twitter_user
+
+    def get_twitter_client_api(self):
+        return self.twitter_client
+
     def get_user_timeline_tweets(self, num_tweets):
         tweets = []
         for tweet in Cursor(self.twitter_client.user_timeline, id=self.twitter_user).items(num_tweets):
@@ -83,12 +91,20 @@ class TwitterListener(StreamListener):
         print(status)
 
 
-if __name__ == '__main__':
-    # Authenticate using config.py and connect to Twitter Streaming API.
-    hash_tag_list = ["donal trump", "hillary clinton", "barack obama", "bernie sanders"]
-    fetched_tweets_filename = "tweets.txt"
+class TweetAnalyzer():
+    # Functionalily for analyzing and categoryzing content from tweets
+    def tweets_to_data_frame(self, tweets):
+        df = pd.DataFrame(data=[tweets.text for tweet in tweets], columns=['Tweets'])
+        return df
 
-    twitter_client = TwitterClient('pycon')
-    print (twitter_client.get_user_timeline_tweets(1))
-    # twitter_streamer = TwitterStreamer()
-    # twitter_streamer.stream_tweets(fetched_tweets_filename, hash_tag_list)
+
+if __name__ == '__main__':
+
+    twitter_client = TwitterClient()
+    tweet_analyzer = TweetAnalyzer()
+    api = twitter_client.get_twitter_client_api()
+
+    tweets = api.user_timeline(screen_name="BillGates", count=3)
+
+    df = tweet_analyzer.tweets_to_data_frame(tweets)
+    print(df.head(10))
