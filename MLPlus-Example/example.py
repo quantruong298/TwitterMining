@@ -37,6 +37,7 @@ stop_words.extend(['from', 'subject', 're', 'edu', 'use'])
 # Import Dataset
 df = pd.read_json('https://raw.githubusercontent.com/selva86/datasets/master/newsgroups.json')
 # print(df.target_names.unique())
+df.target_names = [str(x) for x in df.target_names]
 df.target_names.unique()
 df.head()
 
