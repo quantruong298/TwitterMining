@@ -4,10 +4,10 @@ import pandas as pd
 # from pprint import pprint
 #
 # # Gensim
-# import gensim
-# import gensim.corpora as corpora
-# from gensim.utils import simple_preprocess
-# from gensim.models import CoherenceModel
+import gensim
+import gensim.corpora as corpora
+from gensim.utils import simple_preprocess
+from gensim.models import CoherenceModel
 #
 # # spacy for lemmatization
 # import spacy
@@ -26,6 +26,7 @@ import pandas as pd
 # warnings.filterwarnings("ignore",category=DeprecationWarning)
 
 # ==========DONE STEP 3=====================
+
 # NLTK Stop words
 from nltk.corpus import stopwords
 stop_words = stopwords.words('english')
@@ -40,6 +41,7 @@ df.target_names.unique()
 df.head()
 
 # ==========DONE STEP 6=====================
+
 # Convert to list
 data = df.content.values.tolist()
 
@@ -52,6 +54,19 @@ data = [re.sub('\s+', ' ', sent) for sent in data]
 # Remove distracting single quotes
 data = [re.sub("\'", "", sent) for sent in data]
 
-print(data[:1])
+# print(data[:1])
 
 # ==========DONE STEP 7=====================
+
+
+def sent_to_words(sentences):
+    for sentence in sentences:
+        yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))
+        # deacc=True removes punctuations
+
+
+data_words = list(sent_to_words(data))
+
+print(data_words[:1])
+
+# ==========DONE STEP 8=====================
