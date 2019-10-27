@@ -1,6 +1,6 @@
 # import re
 # import numpy as np
-# import pandas as pd
+import pandas as pd
 # from pprint import pprint
 #
 # # Gensim
@@ -30,3 +30,8 @@
 from nltk.corpus import stopwords
 stop_words = stopwords.words('english')
 stop_words.extend(['from', 'subject', 're', 'edu', 'use'])
+
+# Import Dataset
+df = pd.read_json('https://raw.githubusercontent.com/selva86/datasets/master/newsgroups.json')
+print(df.target_names.unique())
+df.head()
