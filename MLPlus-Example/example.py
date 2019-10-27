@@ -28,9 +28,9 @@ from gensim.models import CoherenceModel
 # ==========DONE STEP 3=====================
 
 # NLTK Stop words
-from nltk.corpus import stopwords
-stop_words = stopwords.words('english')
-stop_words.extend(['from', 'subject', 're', 'edu', 'use'])
+# from nltk.corpus import stopwords
+# stop_words = stopwords.words('english')
+# stop_words.extend(['from', 'subject', 're', 'edu', 'use'])
 
 # ==========DONE STEP 5=====================
 
@@ -46,6 +46,8 @@ df.head()
 # Convert to list
 data = df.content.values.tolist()
 
+# Remove Unicode Character
+data = [sent.encode('utf-8') for sent in data]
 # Remove Emails
 data = [re.sub('\S*@\S*\s?', '', sent) for sent in data]
 
@@ -55,19 +57,19 @@ data = [re.sub('\s+', ' ', sent) for sent in data]
 # Remove distracting single quotes
 data = [re.sub("\'", "", sent) for sent in data]
 
-# print(data[:1])
+print(data[:1])
 
-# ==========DONE STEP 7=====================
-
-
-def sent_to_words(sentences):
-    for sentence in sentences:
-        yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))
-        # deacc=True removes punctuations
-
-
-data_words = list(sent_to_words(data))
-
-print(data_words[:1])
-
-# ==========DONE STEP 8=====================
+# # ==========DONE STEP 7=====================
+#
+#
+# def sent_to_words(sentences):
+#     for sentence in sentences:
+#         yield(gensim.utils.simple_preprocess(str(sentence), deacc=True))
+#         # deacc=True removes punctuations
+#
+#
+# data_words = list(sent_to_words(data))
+#
+# print(data_words[:1])
+#
+# # ==========DONE STEP 8=====================
