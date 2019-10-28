@@ -104,7 +104,8 @@ if __name__ == '__main__':
     tweet_analyzer = TweetAnalyzer()
     api = twitter_client.get_twitter_client_api()
 
-    tweets = api.user_timeline(screen_name="BillGates", count=10)
+    tweet_list = api.user_timeline(screen_name="BillGates", count=10, tweet_mode="extended")
 
-    df = tweet_analyzer.tweets_to_data_frame(tweets)
-    print(dir(tweets[0]))
+
+    tweet = tweet_list[0]
+    print(tweet.full_text)
