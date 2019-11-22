@@ -12,8 +12,8 @@ import pandas
 
 # API Url to get all tweets in someone's Timeline
 # Use '&tweet_mode=extended' to display full text of tweet
-screen_name = 'BillGates'
-url = 'https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=' + screen_name + '&tweet_mode=extended'
+screen_name = 'POTUS'
+url = 'https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=' + screen_name + '&tweet_mode=extended&count='
 
 
 # Data for Twitter Authentication
