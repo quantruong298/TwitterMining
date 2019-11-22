@@ -10,10 +10,10 @@ from gensim.parsing.preprocessing import STOPWORDS
 from nltk.stem import WordNetLemmatizer, SnowballStemmer
 from nltk.stem.porter import *
 import numpy as np
+import tweepy
 
 reload(sys)
 sys.setdefaultencoding('utf8')
-
 
 np.random.seed(2018)
 nltk.download('wordnet')
@@ -31,30 +31,26 @@ def preprocess(text):
     return result
 
 
-screen_name = 'BillGates'
-url = 'https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=' + screen_name + '&tweet_mode=extended'
+# Get Data FROM Twitter
+consumer_key = 'dZFi155G5IDOhM47hxYJBmcjb'
+consumer_secret = 'O49HwYzLVPIPfp2nSVsPmhu7MUulE5x2bUKDjiMctt1JlqN4LG'
+access_token = '1178195198389583872-mHeRnLHYGxAprLgeBrMLn3CcT4ny7P'
+access_token_secret = 'BWpvwlOcafaLUjygWmaYquzXjBFGJ56AUImA7XQlUTG9L'
 
+# OAuth process, using the keys and tokens
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
 
-# Data for Twitter Authentication
-client_key = 'dZFi155G5IDOhM47hxYJBmcjb'
-client_secret = 'O49HwYzLVPIPfp2nSVsPmhu7MUulE5x2bUKDjiMctt1JlqN4LG'
-resource_owner_key = '1178195198389583872-mHeRnLHYGxAprLgeBrMLn3CcT4ny7P'
-resource_owner_secret = 'BWpvwlOcafaLUjygWmaYquzXjBFGJ56AUImA7XQlUTG9L'
-
-oauth = OAuth1(client_key,
-               client_secret,
-               resource_owner_key,
-               resource_owner_secret,
-               signature_type='auth_header')
-response = requests.get(url, auth=oauth)
-tweets = response.json()
-data = pd.DataFrame(data=[tweet['full_text'] for tweet in tweets], columns=['tweet_text'])
-
+# Creation of the actual interface, using authentication
+api = tweepy.API(auth)
+data = pd.DataFrame(columns=['tweet_text'])
+for status in tweepy.Cursor(api.user_timeline, screen_name='@realDonaldTrump', count=200,
+                            tweet_mode="extended").items():
+    data = data.append({'tweet_text': re.sub(r"http\S+", "", status.full_text)}, ignore_index=True)
 
 data_text = data[['tweet_text']]
 data_text['index'] = data_text.index
 documents = data_text
-
 
 # print(len(documents))
 # print(documents[:5])
@@ -70,7 +66,6 @@ documents = data_text
 
 processed_docs = documents['tweet_text'].map(preprocess)
 
-
 dictionary = gensim.corpora.Dictionary(processed_docs)
 
 count = 0
@@ -79,7 +74,6 @@ for k, v in dictionary.iteritems():
     count += 1
     if count > 10:
         break
-
 
 # dictionary.filter_extremes(no_below=15, no_above=0.5, keep_n=100000)
 
@@ -97,12 +91,11 @@ lda_model = gensim.models.LdaMulticore(bow_corpus, num_topics=10, id2word=dictio
 for idx, topic in lda_model.print_topics(-1):
     print('Topic: {} \nWords: {}'.format(idx, topic))
 
-
 # for index, score in sorted(lda_model[bow_corpus[4310]], key=lambda tup: -1*tup[1]):
 #     print("\nScore: {}\t \nTopic: {}".format(score, lda_model.print_topic(index, 10)))
 
 
-unseen_document = "Expanding the diversity of therapies in the pipeline and more efficiently recruiting patients for clinical trials will increase our odds of discovering a breakthrough. I’m hopeful it will lead to an intervention that reduces the impact of Alzheimer"
-bow_vector = dictionary.doc2bow(preprocess(unseen_document))
-for index, score in sorted(lda_model[bow_vector], key=lambda tup: -1*tup[1]):
-    print("Score: {}\t Topic: {}".format(score, lda_model.print_topic(index, 5)))
+# unseen_document = "Expanding the diversity of therapies in the pipeline and more efficiently recruiting patients for clinical trials will increase our odds of discovering a breakthrough. I’m hopeful it will lead to an intervention that reduces the impact of Alzheimer"
+# bow_vector = dictionary.doc2bow(preprocess(unseen_document))
+# for index, score in sorted(lda_model[bow_vector], key=lambda tup: -1*tup[1]):
+#     print("Score: {}\t Topic: {}".format(score, lda_model.print_topic(index, 5)))
