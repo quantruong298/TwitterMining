@@ -1,0 +1,15 @@
+*.pyc
+
+# notebook files and all related files
+.ipynb_checkpoints
+*.ipynb
+
+# distribution related files
+dist/
+twitterpastcrawler.egg-info/
+build/
+
+# misc
+log*.txt
+*.csv
+sample.html
