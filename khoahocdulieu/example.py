@@ -7,8 +7,10 @@ from gensim.utils import simple_preprocess
 import spacy
 
 import nltk
-nltk.download('stopwords')
+# nltk.download('stopwords')
 
+import gensim.corpora as corpora
+from pprint import pprint
 
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -30,12 +32,13 @@ data_words = list(sent_to_words(data))
 # print(data_words[:1])
 
 # ==================================== #
-bigram = gensim.models.Phrases(data_words, min_count=5, threshold=100) # higher threshold fewer phrases.
+bigram = gensim.models.Phrases(data_words, min_count=5, threshold=100)  # higher threshold fewer phrases.
 trigram = gensim.models.Phrases(bigram[data_words], threshold=100)
 
 # Faster way to get a sentence clubbed as a trigram/bigram
 bigram_mod = gensim.models.phrases.Phraser(bigram)
 trigram_mod = gensim.models.phrases.Phraser(trigram)
+
 
 # See trigram example
 # print(trigram_mod[bigram_mod[data_words[0]]])
@@ -68,6 +71,7 @@ def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
 # # NLTK Stop words
 
 from nltk.corpus import stopwords
+
 stop_words = stopwords.words('english')
 stop_words.extend(['from', 'subject', 're', 'edu', 'use'])
 
@@ -84,4 +88,33 @@ nlp = spacy.load('en', disable=['parser', 'ner'])
 # Do lemmatization keeping only noun, adj, vb, adv
 data_lemmatized = lemmatization(data_words_bigrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
 
-print(data_lemmatized[:1])
+# print(data_lemmatized[:1])
+# ====================================== #
+# Create Dictionary
+id2word = corpora.Dictionary(data_lemmatized)
+
+# Create Corpus
+texts = data_lemmatized
+
+# Term Document Frequency
+corpus = [id2word.doc2bow(text) for text in texts]
+
+# View
+# print(corpus[:1])
+
+# =================================== #
+# Build LDA model
+lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
+                                            id2word=id2word,
+                                            num_topics=20,
+                                            random_state=100,
+                                            update_every=1,
+                                            chunksize=100,
+                                            passes=5,
+                                            alpha='auto',
+                                            per_word_topics=True)
+
+
+# Print the Keyword in the 10 topics
+pprint(lda_model.print_topics())
+doc_lda = lda_model[corpus]
