@@ -20,17 +20,18 @@ auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 
 # Creation of endDate
+startDate = datetime.datetime(2017, 6, 1, 0, 0, 0)
 endDate = datetime.datetime(2015, 1, 1, 0, 0, 0)
-
 # Creation of the actual interface, using authentication
 api = tweepy.API(auth)
 tweet_list = pandas.DataFrame(columns=['created_date','tweet_text'])
 for status in tweepy.Cursor(api.user_timeline, screen_name='@RobertDowneyJr', count=200, tweet_mode="extended").items():
     if status.created_at >= endDate:
-        tweet_list = tweet_list.append({
-            'tweet_text': re.sub(r"http\S+", "", status.full_text),
-            'created_date': status.created_at
-        }, ignore_index=True)
+        if status.created_at <= startDate:
+            tweet_list = tweet_list.append({
+                'tweet_text': re.sub(r"http\S+", "", status.full_text),
+                'created_date': status.created_at
+            }, ignore_index=True)
     else:
         break
 
