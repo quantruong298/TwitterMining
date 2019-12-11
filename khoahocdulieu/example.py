@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # Import Dataset
 import pandas as pd
 import gensim
@@ -5,21 +6,37 @@ import sys
 import nltk
 from gensim.utils import simple_preprocess
 import spacy
-
+import tweepy
 import nltk
 # nltk.download('stopwords')
-
+from nltk.stem.porter import *
 import gensim.corpora as corpora
 from pprint import pprint
 
 reload(sys)
 sys.setdefaultencoding('utf8')
+
 # ==================================== #
-df = pd.read_json('https://raw.githubusercontent.com/selva86/datasets/master/newsgroups.json')
-# print(df.target_names.unique())
-# df.head()
+# Get Data FROM Twitter
+consumer_key = 'dZFi155G5IDOhM47hxYJBmcjb'
+consumer_secret = 'O49HwYzLVPIPfp2nSVsPmhu7MUulE5x2bUKDjiMctt1JlqN4LG'
+access_token = '1178195198389583872-mHeRnLHYGxAprLgeBrMLn3CcT4ny7P'
+access_token_secret = 'BWpvwlOcafaLUjygWmaYquzXjBFGJ56AUImA7XQlUTG9L'
+
+# OAuth process, using the keys and tokens
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+
+# Creation of the actual interface, using authentication
+api = tweepy.API(auth)
+tweets = pd.DataFrame(columns=['tweet_text'])
+for status in tweepy.Cursor(api.user_timeline, screen_name='@RobertDowneyJr', count=200,
+                            tweet_mode="extended").items():
+    tweets = tweets.append({'tweet_text': re.sub(r"http\S+", "", status.full_text)}, ignore_index=True)
+
+
 # ==================================== #
-data = list(df['content'])
+data = list(tweets['tweet_text'])
 
 
 def sent_to_words(sentences):

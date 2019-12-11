@@ -29,6 +29,7 @@ app = FlaskAPI(__name__)
 CORS(app)
 
 tweet_list = pandas.DataFrame(columns=['created_at', 'tweet_text'])
+topics = ""
 
 
 @app.route('/<screenName>')
@@ -43,5 +44,10 @@ def getTweets(screenName):
     return tweet_list.to_json(orient='records')
 
 
+@app.route('/topics')
+def findTopics():
+    global topics
+
+    return topics
 if __name__ == '__main__':
     app.run()
