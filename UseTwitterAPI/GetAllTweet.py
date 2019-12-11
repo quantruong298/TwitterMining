@@ -31,10 +31,10 @@ CORS(app)
 tweet_list = pandas.DataFrame(columns=['created_at', 'tweet_text'])
 
 
-@app.route('/')
-def getTweets():
+@app.route('/<screenName>')
+def getTweets(screenName):
     global tweet_list
-    for status in tweepy.Cursor(api.user_timeline, screen_name='@RobertDowneyJr', count=200, tweet_mode="extended").items():
+    for status in tweepy.Cursor(api.user_timeline, screen_name=screenName, count=200, tweet_mode="extended").items():
         tweet_list = tweet_list.append({
             'created_at': datetime.strftime(status.created_at, '%a %b %d %H:%M:%S %z %Y'),
             'tweet_text': re.sub(r"http\S+", "", status.full_text)
