@@ -2,12 +2,17 @@ from __future__ import unicode_literals
 import tweepy
 import sys
 import gensim
+from gensim.utils import simple_preprocess
 import pandas
+import spacy
 import re
 import json
 from flask_api import FlaskAPI
 from flask_cors import CORS
 from datetime import datetime
+from nltk.stem.porter import *
+import gensim.corpora as corpora
+
 reload(sys)
 sys.setdefaultencoding('utf8')
 # Setting for display full data in DataFrame
@@ -33,9 +38,19 @@ api = tweepy.API(auth)
 app = FlaskAPI(__name__)
 CORS(app)
 
+
+# Create global variables
 tweet_list = pandas.DataFrame(columns=['created_at', 'tweet_text'])
 topics = ""
-
+bigram_mod = []
+trigram_mod = []
+# # NLTK Stop words
+from nltk.corpus import stopwords
+stop_words = stopwords.words('english')
+stop_words.extend(['from', 'subject', 're', 'edu', 'use'])
+# Initialize spacy 'en' model, keeping only tagger component (for efficiency)
+# python3 -m spacy download en
+nlp = spacy.load('en', disable=['parser', 'ner'])
 # ======================= #
 
 
@@ -43,6 +58,28 @@ def sent_to_words(sentences):
     for sentence in sentences:
         yield gensim.utils.simple_preprocess(str(sentence), deacc=True)  # deacc=True removes punctuations
 
+# Define functions for stopwords, bigrams, trigrams and lemmatization
+
+
+def remove_stopwords(texts):
+    return [[word for word in simple_preprocess(str(doc)) if word not in stop_words] for doc in texts]
+
+
+def make_bigrams(texts):
+    return [bigram_mod[doc] for doc in texts]
+
+
+def make_trigrams(texts):
+    return [trigram_mod[bigram_mod[doc]] for doc in texts]
+
+
+def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
+    """https://spacy.io/api/annotation"""
+    texts_out = []
+    for sent in texts:
+        doc = nlp(" ".join(sent))
+        texts_out.append([token.lemma_ for token in doc if token.pos_ in allowed_postags])
+    return texts_out
 
 # ======================= #
 
@@ -62,10 +99,33 @@ def getTweets(screenName):
 
 @app.route('/topics')
 def findTopics():
+    # Declare globals
+    global bigram_mod
+    global trigram_mod
+    # Make a list of tweet_text
     data = list(tweet_list['tweet_text'])
+
+    # Make a simple_processing
     data_words = list(sent_to_words(data))
 
-    return data_words
+    # Make bigram and trigram
+    bigram = gensim.models.Phrases(data_words, min_count=5, threshold=100)  # higher threshold fewer phrases.
+    trigram = gensim.models.Phrases(bigram[data_words], threshold=100)
+
+    # Faster way to get a sentence clubbed as a trigram/bigram
+    bigram_mod = gensim.models.phrases.Phraser(bigram)
+    trigram_mod = gensim.models.phrases.Phraser(trigram)
+
+    # Remove Stop Words
+    data_words_nostops = remove_stopwords(data_words)
+
+    # Form Bigrams
+    data_words_bigrams = make_bigrams(data_words_nostops)
+
+    # Do lemmatization keeping only noun, adj, vb, adv
+    data_lemmatized = lemmatization(data_words_bigrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
+
+    return data_lemmatized
 
 
 if __name__ == '__main__':
