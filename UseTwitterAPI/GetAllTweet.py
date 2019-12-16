@@ -9,6 +9,7 @@ import re
 import json
 from flask_api import FlaskAPI
 from flask_cors import CORS
+from flask import request
 from datetime import datetime
 from nltk.stem.porter import *
 import gensim.corpora as corpora
@@ -38,7 +39,6 @@ api = tweepy.API(auth)
 app = FlaskAPI(__name__)
 CORS(app)
 
-
 # Create global variables
 tweet_list = pandas.DataFrame(columns=['created_at', 'tweet_text'])
 topics = ""
@@ -46,17 +46,21 @@ bigram_mod = []
 trigram_mod = []
 # # NLTK Stop words
 from nltk.corpus import stopwords
+
 stop_words = stopwords.words('english')
 stop_words.extend(['from', 'subject', 're', 'edu', 'use'])
 # Initialize spacy 'en' model, keeping only tagger component (for efficiency)
 # python3 -m spacy download en
 nlp = spacy.load('en', disable=['parser', 'ner'])
+
+
 # ======================= #
 
 
 def sent_to_words(sentences):
     for sentence in sentences:
         yield gensim.utils.simple_preprocess(str(sentence), deacc=True)  # deacc=True removes punctuations
+
 
 # Define functions for stopwords, bigrams, trigrams and lemmatization
 
@@ -81,17 +85,41 @@ def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
         texts_out.append([token.lemma_ for token in doc if token.pos_ in allowed_postags])
     return texts_out
 
+
 # ======================= #
 
 
-@app.route('/<screenName>')
-def getTweets(screenName):
+@app.route('/', methods=['POST'])
+def getTweets():
+    data = request.get_json()
+    screenname = data['screenName']
+    if data['startDate'] == '':
+        startDate = datetime.today()
+    else:
+        startDate = datetime.strptime(data['startDate'], '%Y-%m-%d')
+
     global tweet_list
-    for status in tweepy.Cursor(api.user_timeline, screen_name=screenName, count=200, tweet_mode="extended").items():
-        tweet_list = tweet_list.append({
-            'created_at': datetime.strftime(status.created_at, '%a %b %d %H:%M:%S %z %Y'),
-            'tweet_text': re.sub(r"http\S+", "", status.full_text)
-        }, ignore_index=True)
+    tweet_list = tweet_list[0:0]
+    if data['endDate'] != '':
+        endDate = datetime.strptime(data['endDate'], '%Y-%m-%d')
+        for status in tweepy.Cursor(api.user_timeline, screen_name=screenname, count=200,
+                                    tweet_mode="extended").items():
+            if status.created_at >= endDate:
+                if status.created_at <= startDate:
+                    tweet_list = tweet_list.append({
+                        'created_at': datetime.strftime(status.created_at, '%m-%d-%Y'),
+                        'tweet_text': re.sub(r"http\S+", "", status.full_text)
+                    }, ignore_index=True)
+            else:
+                break
+    else:
+        for status in tweepy.Cursor(api.user_timeline, screen_name=screenname, count=200,
+                                    tweet_mode="extended").items():
+            if status.created_at <= startDate:
+                tweet_list = tweet_list.append({
+                    'created_at': datetime.strftime(status.created_at, '%m-%d-%Y'),
+                    'tweet_text': re.sub(r"http\S+", "", status.full_text)
+                }, ignore_index=True)
 
     response = tweet_list.to_json(orient='records')
     return response
@@ -144,7 +172,9 @@ def findTopics():
                                                 passes=5,
                                                 alpha='auto',
                                                 per_word_topics=True)
-    return json.dumps(lda_model.print_topics())
+
+    response = json.dumps(lda_model.print_topics())
+    return response
 
 
 if __name__ == '__main__':
