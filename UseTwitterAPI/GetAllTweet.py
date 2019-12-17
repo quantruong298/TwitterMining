@@ -125,8 +125,8 @@ def getTweets():
     return response
 
 
-@app.route('/topics')
-def findTopics():
+@app.route('/topics/<num>')
+def findTopics(num):
     # Declare globals
     global bigram_mod
     global trigram_mod
@@ -165,7 +165,7 @@ def findTopics():
     # Build LDA model
     lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
                                                 id2word=id2word,
-                                                num_topics=20,
+                                                num_topics=num,
                                                 random_state=100,
                                                 update_every=1,
                                                 chunksize=100,
