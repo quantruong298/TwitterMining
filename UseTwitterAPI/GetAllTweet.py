@@ -13,7 +13,7 @@ from flask import request
 from datetime import datetime
 from nltk.stem.porter import *
 import gensim.corpora as corpora
-
+import preprocessor
 reload(sys)
 sys.setdefaultencoding('utf8')
 # Setting for display full data in DataFrame
@@ -59,7 +59,7 @@ nlp = spacy.load('en', disable=['parser', 'ner'])
 
 def sent_to_words(sentences):
     for sentence in sentences:
-        yield gensim.utils.simple_preprocess(str(sentence), deacc=True)  # deacc=True removes punctuations
+        yield gensim.utils.simple_preprocess(str(preprocessor.clean(sentence)), deacc=True)  # deacc=True removes punctuations
 
 
 # Define functions for stopwords, bigrams, trigrams and lemmatization
@@ -77,7 +77,7 @@ def make_trigrams(texts):
     return [trigram_mod[bigram_mod[doc]] for doc in texts]
 
 
-def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
+def lemmatization(texts, allowed_postags=['NOUN']):
     """https://spacy.io/api/annotation"""
     texts_out = []
     for sent in texts:
@@ -108,7 +108,7 @@ def getTweets():
                 if status.created_at <= startDate:
                     tweet_list = tweet_list.append({
                         'created_at': datetime.strftime(status.created_at, '%m-%d-%Y'),
-                        'tweet_text': re.sub(r"http\S+", "", status.full_text)
+                        'tweet_text': status.full_text
                     }, ignore_index=True)
             else:
                 break
@@ -118,7 +118,7 @@ def getTweets():
             if status.created_at <= startDate:
                 tweet_list = tweet_list.append({
                     'created_at': datetime.strftime(status.created_at, '%m-%d-%Y'),
-                    'tweet_text': re.sub(r"http\S+", "", status.full_text)
+                    'tweet_text': status.full_text
                 }, ignore_index=True)
 
     response = tweet_list.to_json(orient='records')
@@ -151,7 +151,7 @@ def findTopics(num):
     data_words_bigrams = make_bigrams(data_words_nostops)
 
     # Do lemmatization keeping only noun, adj, vb, adv
-    data_lemmatized = lemmatization(data_words_bigrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
+    data_lemmatized = lemmatization(data_words_bigrams, allowed_postags=['NOUN'])
 
     # Create Dictionary
     id2word = corpora.Dictionary(data_lemmatized)
@@ -169,7 +169,7 @@ def findTopics(num):
                                                 random_state=100,
                                                 update_every=1,
                                                 chunksize=100,
-                                                passes=5,
+                                                passes=100,
                                                 alpha='auto',
                                                 per_word_topics=True)
 

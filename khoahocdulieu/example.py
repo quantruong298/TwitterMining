@@ -15,7 +15,7 @@ import datetime
 import pprint
 reload(sys)
 sys.setdefaultencoding('utf8')
-
+import preprocessor as p
 # ==================================== #
 pd.set_option('display.max_rows', None)
 # pd.set_option('display.max_columns', None)
@@ -41,8 +41,7 @@ tweets = pd.DataFrame(columns=['tweet_text'])
 for status in tweepy.Cursor(api.user_timeline, screen_name='@elonmusk', count=200, tweet_mode="extended").items():
     if status.created_at >= endDate:
         if status.created_at <= startDate:
-            tweet = re.sub(r"http\S+", "", status.full_text)
-            tweet = ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)", " ", tweet).split())
+            tweet = status.full_text
             tweets = tweets.append({
                 'tweet_text': tweet,
                 'created_date': status.created_at
@@ -56,7 +55,7 @@ data = list(tweets['tweet_text'])
 
 def sent_to_words(sentences):
     for sentence in sentences:
-        yield gensim.utils.simple_preprocess(str(sentence), deacc=True)  # deacc=True removes punctuations
+        yield gensim.utils.simple_preprocess(str(p.clean(sentence)), deacc=True)  # deacc=True removes punctuations
 
 
 data_words = list(sent_to_words(data))
