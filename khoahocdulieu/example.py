@@ -12,6 +12,7 @@ import nltk
 from nltk.stem.porter import *
 import gensim.corpora as corpora
 from pprint import pprint
+import datetime
 
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -27,12 +28,21 @@ access_token_secret = 'BWpvwlOcafaLUjygWmaYquzXjBFGJ56AUImA7XQlUTG9L'
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 
+# Creation of endDate
+startDate = datetime.datetime(2017, 6, 1, 0, 0, 0)
+endDate = datetime.datetime(2015, 1, 1, 0, 0, 0)
 # Creation of the actual interface, using authentication
 api = tweepy.API(auth)
 tweets = pd.DataFrame(columns=['tweet_text'])
-for status in tweepy.Cursor(api.user_timeline, screen_name='@RobertDowneyJr', count=200,
-                            tweet_mode="extended").items():
-    tweets = tweets.append({'tweet_text': re.sub(r"http\S+", "", status.full_text)}, ignore_index=True)
+for status in tweepy.Cursor(api.user_timeline, screen_name='@RobertDowneyJr', count=200, tweet_mode="extended").items():
+    if status.created_at >= endDate:
+        if status.created_at <= startDate:
+            tweets = tweets.append({
+                'tweet_text': re.sub(r"http\S+", "", status.full_text),
+                'created_date': status.created_at
+            }, ignore_index=True)
+    else:
+        break
 
 
 # ==================================== #
@@ -133,5 +143,5 @@ lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,
 
 
 # Print the Keyword in the 10 topics
-pprint(lda_model.print_topics())
-doc_lda = lda_model[corpus]
+# pprint(lda_model.print_topics())
+# doc_lda = lda_model[corpus]
