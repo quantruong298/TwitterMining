@@ -11,13 +11,17 @@ import nltk
 # nltk.download('stopwords')
 from nltk.stem.porter import *
 import gensim.corpora as corpora
-from pprint import pprint
 import datetime
-
+import pprint
 reload(sys)
 sys.setdefaultencoding('utf8')
 
 # ==================================== #
+pd.set_option('display.max_rows', None)
+# pd.set_option('display.max_columns', None)
+pd.set_option('display.width', None)
+pd.set_option('display.max_colwidth', -1)
+
 # Get Data FROM Twitter
 consumer_key = 'dZFi155G5IDOhM47hxYJBmcjb'
 consumer_secret = 'O49HwYzLVPIPfp2nSVsPmhu7MUulE5x2bUKDjiMctt1JlqN4LG'
@@ -29,25 +33,26 @@ auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 
 # Creation of endDate
-startDate = datetime.datetime(2017, 6, 1, 0, 0, 0)
-endDate = datetime.datetime(2015, 1, 1, 0, 0, 0)
+startDate = datetime.datetime(2019, 12, 31, 0, 0, 0)
+endDate = datetime.datetime(2019, 12, 1, 0, 0, 0)
 # Creation of the actual interface, using authentication
 api = tweepy.API(auth)
 tweets = pd.DataFrame(columns=['tweet_text'])
-for status in tweepy.Cursor(api.user_timeline, screen_name='@RobertDowneyJr', count=200, tweet_mode="extended").items():
+for status in tweepy.Cursor(api.user_timeline, screen_name='@elonmusk', count=200, tweet_mode="extended").items():
     if status.created_at >= endDate:
         if status.created_at <= startDate:
+            tweet = re.sub(r"http\S+", "", status.full_text)
+            tweet = ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)", " ", tweet).split())
             tweets = tweets.append({
-                'tweet_text': re.sub(r"http\S+", "", status.full_text),
+                'tweet_text': tweet,
                 'created_date': status.created_at
             }, ignore_index=True)
     else:
         break
 
-
+print(tweets)
 # ==================================== #
 data = list(tweets['tweet_text'])
-
 
 def sent_to_words(sentences):
     for sentence in sentences:
@@ -56,7 +61,7 @@ def sent_to_words(sentences):
 
 data_words = list(sent_to_words(data))
 
-# print(data_words[:1])
+print(data_words)
 
 # ==================================== #
 bigram = gensim.models.Phrases(data_words, min_count=5, threshold=100)  # higher threshold fewer phrases.
