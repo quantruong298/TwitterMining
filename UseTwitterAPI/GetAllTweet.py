@@ -77,7 +77,7 @@ def make_trigrams(texts):
     return [trigram_mod[bigram_mod[doc]] for doc in texts]
 
 
-def lemmatization(texts, allowed_postags=['NOUN']):
+def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
     """https://spacy.io/api/annotation"""
     texts_out = []
     for sent in texts:
@@ -151,7 +151,7 @@ def findTopics(num):
     data_words_bigrams = make_bigrams(data_words_nostops)
 
     # Do lemmatization keeping only noun, adj, vb, adv
-    data_lemmatized = lemmatization(data_words_bigrams, allowed_postags=['NOUN'])
+    data_lemmatized = lemmatization(data_words_bigrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
 
     # Create Dictionary
     id2word = corpora.Dictionary(data_lemmatized)
