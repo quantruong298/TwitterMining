@@ -14,6 +14,7 @@ from datetime import datetime
 from nltk.stem.porter import *
 import gensim.corpora as corpora
 import preprocessor
+
 reload(sys)
 sys.setdefaultencoding('utf8')
 # Setting for display full data in DataFrame
@@ -44,6 +45,7 @@ tweet_list = pandas.DataFrame(columns=['created_at', 'tweet_text'])
 topics = ""
 bigram_mod = []
 trigram_mod = []
+lda_model = None
 # # NLTK Stop words
 from nltk.corpus import stopwords
 
@@ -108,7 +110,7 @@ def getTweets():
                 if status.created_at <= startDate:
                     tweet_list = tweet_list.append({
                         'created_at': datetime.strftime(status.created_at, '%m-%d-%Y'),
-                        'tweet_text': re.sub(r"http\S+", "", status.full_text)
+                        'tweet_text': status.full_text
                     }, ignore_index=True)
             else:
                 break
@@ -118,18 +120,17 @@ def getTweets():
             if status.created_at <= startDate:
                 tweet_list = tweet_list.append({
                     'created_at': datetime.strftime(status.created_at, '%m-%d-%Y'),
-                    'tweet_text': re.sub(r"http\S+", "", status.full_text)
+                    'tweet_text': status.full_text
                 }, ignore_index=True)
 
     response = tweet_list.to_json(orient='records')
     return response
-
-
 @app.route('/topics/<num>')
 def findTopics(num):
     # Declare globals
     global bigram_mod
     global trigram_mod
+    global lda_model
     # Make a list of tweet_text
     data = list(tweet_list['tweet_text'])
 
@@ -169,7 +170,7 @@ def findTopics(num):
                                                 random_state=100,
                                                 update_every=1,
                                                 chunksize=100,
-                                                passes=100,
+                                                passes=5,
                                                 alpha='auto',
                                                 per_word_topics=True)
 
