@@ -108,7 +108,7 @@ def getTweets():
                 if status.created_at <= startDate:
                     tweet_list = tweet_list.append({
                         'created_at': datetime.strftime(status.created_at, '%m-%d-%Y'),
-                        'tweet_text': status.full_text
+                        'tweet_text': re.sub(r"http\S+", "", status.full_text)
                     }, ignore_index=True)
             else:
                 break
@@ -118,7 +118,7 @@ def getTweets():
             if status.created_at <= startDate:
                 tweet_list = tweet_list.append({
                     'created_at': datetime.strftime(status.created_at, '%m-%d-%Y'),
-                    'tweet_text': status.full_text
+                    'tweet_text': re.sub(r"http\S+", "", status.full_text)
                 }, ignore_index=True)
 
     response = tweet_list.to_json(orient='records')
