@@ -6,6 +6,7 @@ from gensim.utils import simple_preprocess
 import pandas
 import spacy
 import re
+import numpy as np
 import json
 from flask_api import FlaskAPI
 from flask_cors import CORS
@@ -49,7 +50,7 @@ trigram_mod = []
 lda_model = None
 id2word = None
 data_lemmatized = None
-corpus = None
+corpus = []
 # # NLTK Stop words
 from nltk.corpus import stopwords
 
@@ -171,7 +172,7 @@ def findTopics(num):
     data_words = list(sent_to_words(data))
 
     # Make bigram and trigram
-    bigram = gensim.models.Phrases(data_words, min_count=5, threshold=100)  # higher threshold fewer phrases.
+    bigram = gensim.models.Phrases(data_words, min_count=2, threshold=100)  # higher threshold fewer phrases.
     trigram = gensim.models.Phrases(bigram[data_words], threshold=100)
 
     # Faster way to get a sentence clubbed as a trigram/bigram
@@ -222,6 +223,18 @@ def findCoherences():
                                                      limit=30, step=1)
 
     response = coherence_values
+    return response
+
+
+@app.route('/docs/<num>')
+def docTopics(num):
+    doc_topics = lda_model.get_document_topics(corpus[int(num)])
+    array = []
+    for topic in doc_topics:
+        distribution = [str(topic[0]), str(topic[1])]
+        array.append(distribution)
+
+    response = array
     return response
 
 
