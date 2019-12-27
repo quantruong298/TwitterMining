@@ -231,7 +231,7 @@ def docTopics(num):
     doc_topics = lda_model.get_document_topics(corpus[int(num)])
     array = []
     for topic in doc_topics:
-        distribution = [str(topic[0]), str(topic[1])]
+        distribution = [int(topic[0]), float(topic[1])]
         array.append(distribution)
 
     response = array
