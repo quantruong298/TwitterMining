@@ -131,6 +131,7 @@ def getTweets():
 
     global tweet_list
     tweet_list = tweet_list[0:0]
+    i = 0
     if data['endDate'] != '':
         endDate = datetime.strptime(data['endDate'], '%Y-%m-%d')
         for status in tweepy.Cursor(api.user_timeline, screen_name=screenname, count=200,
@@ -138,20 +139,23 @@ def getTweets():
             if status.created_at >= endDate:
                 if status.created_at <= startDate:
                     tweet_list = tweet_list.append({
+                        'stt': i,
                         'created_at': datetime.strftime(status.created_at, '%m-%d-%Y'),
                         'tweet_text': status.full_text
                     }, ignore_index=True)
             else:
                 break
+            i += 1
     else:
         for status in tweepy.Cursor(api.user_timeline, screen_name=screenname, count=200,
                                     tweet_mode="extended").items():
             if status.created_at <= startDate:
                 tweet_list = tweet_list.append({
+                    'stt': i,
                     'created_at': datetime.strftime(status.created_at, '%m-%d-%Y'),
                     'tweet_text': status.full_text
                 }, ignore_index=True)
-
+            i += 1
     response = tweet_list.to_json(orient='records')
     return response
 
